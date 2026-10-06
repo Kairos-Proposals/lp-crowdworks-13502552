@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kairos Proposal — Automation Browser App for Android</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0A121E;
+    --bg-panel:#101D30;
+    --bg-panel-2:#152743;
+    --grid-line: rgba(79,209,197,0.07);
+    --cyan:#4FD1C5;
+    --orange:#FF8A3D;
+    --amber:#FFC857;
+    --text-main:#E8EEF5;
+    --text-sub:#8CA0BC;
+    --line:rgba(140,160,188,0.18);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:var(--bg-deep);
+    color:var(--text-main);
+    font-family:'Noto Sans JP', sans-serif;
+    line-height:1.8;
+    overflow-x:hidden;
+  }
+
+  h1,h2,h3,.mono{
+    font-family:'Space Mono', monospace;
+  }
+
+  .grid-bg{
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+
+  a{color:inherit; text-decoration:none;}
+
+  .wrap{
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  /* ===== 共通: コーナーマーカー ===== */
+  .frame{
+    position:relative;
+    border:1px solid var(--line);
+  }
+  .frame::before, .frame::after,
+  .frame .tr-corner, .frame .bl-corner{
+    content:'';
+    position:absolute;
+    width:14px; height:14px;
+    border:1.5px solid var(--cyan);
+    opacity:0.8;
+  }
+  .frame::before{ top:-1px; left:-1px; border-right:none; border-bottom:none; }
+  .frame::after{ bottom:-1px; right:-1px; border-left:none; border-top:none; }
+  .frame .tr-corner{ top:-1px; right:-1px; border-left:none; border-bottom:none; }
+  .frame .bl-corner{ bottom:-1px; left:-1px; border-right:none; border-top:none; }
+
+  /* ===== HERO ===== */
+  .hero{
+    position:relative;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:140px 0 100px;
+  }
+
+  .hero::before{
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    background:
+      radial-gradient(ellipse at 20% 15%, rgba(79,209,197,0.10), transparent 55%),
+      radial-gradient(ellipse at 85% 80%, rgba(255,138,61,0.08), transparent 50%);
+    pointer-events:none;
+  }
+
+  .coord-tag{
+    position:absolute;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--cyan);
+    opacity:0.45;
+    letter-spacing:0.08em;
+  }
+  .c1{ top:12%; left:6%; }
+  .c2{ top:18%; right:7%; }
+  .c3{ bottom:14%; left:9%; }
+  .c4{ bottom:20%; right:5%; }
+
+  .crosshair{
+    position:absolute;
+    width:26px; height:26px;
+    opacity:0.5;
+  }
+  .crosshair::before, .crosshair::after{
+    content:'';
+    position:absolute;
+    background:var(--orange);
+  }
+  .crosshair::before{ top:50%; left:0; right:0; height:1px; transform:translateY(-50%); }
+  .crosshair::after{ left:50%; top:0; bottom:0; width:1px; transform:translateX(-50%); }
+  .ch1{ top:10%; right:14%; }
+  .ch2{ bottom:16%; left:16%; }
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    color:var(--cyan);
+    border:1px solid rgba(79,209,197,0.35);
+    padding:7px 16px;
+    border-radius:2px;
+    margin-bottom:34px;
+    background:rgba(79,209,197,0.05);
+  }
+  .badge .dot{
+    width:6px; height:6px;
+    background:var(--orange);
+    border-radius:50%;
+    box-shadow:0 0 8px var(--orange);
+  }
+
+  .hero h1{
+    font-size:clamp(32px, 5.4vw, 58px);
+    line-height:1.4;
+    font-weight:700;
+    letter-spacing:0.01em;
+    max-width:900px;
+  }
+  .hero h1 .accent{
+    color:var(--cyan);
+  }
+  .hero h1 .accent2{
+    color:var(--orange);
+  }
+
+  .hero-sub{
+    margin-top:28px;
+    font-size:16px;
+    color:var(--text-sub);
+    max-width:620px;
+  }
+
+  .hero-footer{
+    margin-top:56px;
+    display:flex;
+    gap:40px;
+    flex-wrap:wrap;
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--text-sub);
+  }
+  .hero-footer div span{
+    display:block;
+    color:var(--text-main);
+    font-size:14px;
+    margin-top:4px;
+  }
+
+  /* ===== SECTION 共通 ===== */
+  section{
+    padding:110px 0;
+    position:relative;
+    border-top:1px solid var(--line);
+  }
+
+  .sec-label{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.22em;
+    color:var(--orange);
+    margin-bottom:18px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .sec-label::before{
+    content:'';
+    width:30px; height:1px;
+    background:var(--orange);
+  }
+
+  .sec-title{
+    font-size:clamp(24px, 3.4vw, 36px);
+    font-weight:700;
+    margin-bottom:28px;
+    line-height:1.5;
+  }
+
+  /* ===== UNDERSTANDING ===== */
+  .understand-grid{
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:60px;
+    align-items:start;
+  }
+
+  .issue-list{
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .issue-list li{
+    display:flex;
+    gap:16px;
+    padding:18px 20px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--cyan);
+  }
+  .issue-list .num{
+    font-family:'Space Mono', monospace;
+    color:var(--cyan);
+    font-size:13px;
+    opacity:0.8;
+    flex-shrink:0;
+  }
+  .issue-list p{
+    font-size:14.5px;
+    color:var(--text-sub);
+  }
+  .issue-list strong{
+    color:var(--text-main);
+    font-weight:500;
+  }
+
+  .quote-box{
+    padding:32px;
+    background:var(--bg-panel-2);
+    position:relative;
+  }
+  .quote-box .mark{
+    font-family:'Space Mono', monospace;
+    font-size:60px;
+    color:var(--cyan);
+    opacity:0.25;
+    line-height:1;
+  }
+  .quote-box p{
+    font-size:15.5px;
+    color:var(--text-main);
+    margin-top:10px;
+  }
+  .quote-box .sign{
+    margin-top:24px;
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--text-sub);
+  }
+
+  /* ===== VALUE CARDS ===== */
+  .value-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:24px;
+  }
+
+  .value-card{
+    background:var(--bg-panel);
+    padding:30px 26px;
+    position:relative;
+    transition:transform .25s ease, border-color .25s ease;
+  }
+  .value-card:hover{
+    transform:translateY(-4px);
+    border-color:rgba(79,209,197,0.5);
+  }
+  .value-card .idx{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--orange);
+    letter-spacing:0.12em;
+    margin-bottom:18px;
+    opacity:0.85;
+  }
+  .value-card h3{
+    font-size:17px;
+    font-weight:700;
+    margin-bottom:12px;
+    line-height:1.5;
+  }
+  .value-card p{
+    font-size:13.5px;
+    color:var(--text-sub);
+  }
+  .value-card .tag{
+    margin-top:18px;
+    display:inline-block;
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    color:var(--cyan);
+    border:1px solid rgba(79,209,197,0.3);
+    padding:3px 10px;
+    letter-spacing:0.05em;
+  }
+
+  /* ===== SCHEDULE ===== */
+  .timeline{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+  }
+  .t-row{
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:28px;
+    padding:28px 0;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .t-row:last-child{ border-bottom:none; }
+  .t-step{
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    color:var(--cyan);
+  }
+  .t-step .big{
+    display:block;
+    font-size:30px;
+    color:var(--text-main);
+    font-weight:700;
+    margin-top:4px;
+  }
+  .t-body h4{
+    font-size:16.5px;
+    margin-bottom:8px;
+  }
+  .t-body p{
+    font-size:13.5px;
+    color:var(--text-sub);
+    max-width:620px;
+  }
+  .t-dur{
+    position:absolute;
+    right:0; top:28px;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--orange);
+    opacity:0.85;
+  }
+
+  /* ===== CLOSING ===== */
+  .closing{
+    text-align:center;
+    padding-bottom:140px;
+  }
+  .closing-panel{
+    background:linear-gradient(145deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+    padding:70px 40px;
+    position:relative;
+  }
+  .closing h2{
+    font-size:clamp(24px,3.6vw,38px);
+    font-weight:700;
+    margin-bottom:20px;
+  }
+  .closing h2 span{ color:var(--cyan); }
+  .closing p{
+    color:var(--text-sub);
+    max-width:560px;
+    margin:0 auto 38px;
+    font-size:15px;
+  }
+  .cta-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    background:var(--cyan);
+    color:#0A121E;
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.06em;
+    padding:17px 36px;
+    border-radius:2px;
+    transition:background .2s ease, transform .2s ease;
+  }
+  .cta-btn:hover{
+    background:var(--amber);
+    transform:translateY(-2px);
+  }
+
+  .closing-meta{
+    margin-top:46px;
+    display:flex;
+    justify-content:center;
+    gap:50px;
+    flex-wrap:wrap;
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    color:var(--text-sub);
+  }
+  .closing-meta div span{
+    display:block;
+    color:var(--text-main);
+    font-size:13.5px;
+    margin-top:4px;
+  }
+
+  footer{
+    text-align:center;
+    padding:30px 0 50px;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--text-sub);
+    opacity:0.6;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 860px){
+    .understand-grid{ grid-template-columns:1fr; gap:36px; }
+    .value-grid{ grid-template-columns:repeat(2, 1fr); }
+    .t-row{ grid-template-columns:1fr; }
+    .t-dur{ position:static; margin-top:10px; display:block; }
+  }
+  @media (max-width: 560px){
+    .value-grid{ grid-template-columns:1fr; }
+    .hero{ padding:120px 0 80px; }
+    section{ padding:80px 0; }
+    .hero-footer{ gap:24px; }
+    .closing-meta{ gap:28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero grid-bg">
+  <div class="coord-tag c1">X:0&nbsp;&nbsp;Y:0</div>
+  <div class="coord-tag c2">W:1080&nbsp;&nbsp;H:1920</div>
+  <div class="coord-tag c3">PROFILE_03 / ACTIVE</div>
+  <div class="coord-tag c4">SCALE:1.00 FIXED</div>
+  <div class="crosshair ch1"></div>
+  <div class="crosshair ch2"></div>
+
+  <div class="wrap">
+    <div class="badge"><span class="dot"></span>KAIROS PROPOSAL — FOR WOLF20165</div>
+    <h1>
+      端末が変わっても、<br>
+      <span class="accent">座標</span>は裏切らない。<br>
+      自動化のための<span class="accent2">専用ブラウザ</span>を、設計する。
+    </h1>
+    <p class="hero-sub">
+      MacroDroid・Tasker運用を前提にした、解像度固定・複数プロファイル管理対応のAndroidブラウザアプリ。
+      私たちKairosが、仕様書（エクセル）の一行一行を図面として読み解き、実装します。
+    </p>
+    <div class="hero-footer">
+      <div>CATEGORY<span>Android App / WebView</span></div>
+      <div>BUDGET<span>お見積りにて対応</span></div>
+      <div>DELIVERY<span>APK納品・約1ヶ月目安</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== UNDERSTANDING ===================== -->
+<section>
+  <div class="wrap">
+    <div class="sec-label">UNDERSTANDING</div>
+    <h2 class="sec-title">これは「ブラウザアプリ」ではなく、<br>「自動化が信頼できる基盤」を作る仕事だと理解しています。</h2>
+
+    <div class="understand-grid">
+      <ul class="issue-list">
+        <li>
+          <span class="num">01</span>
+          <p><strong>端末差による自動化の破綻</strong><br>機種ごとに解像度・表示範囲が異なり、同じマクロが別端末で動かない。これが今回の一番の根本課題だと読み取りました。</p>
+        </li>
+        <li>
+          <span class="num">02</span>
+          <p><strong>プロファイルの保存・切替・リセット</strong><br>単なるブックマーク機能ではなく、運用環境ごとの状態管理として設計する必要があります。</p>
+        </li>
+        <li>
+          <span class="num">03</span>
+          <p><strong>座標判定マーカー</strong><br>表示エリア外に基準点を置く＝マクロ側からの「アンカー」として機能させる、精密な位置合わせが要求されます。</p>
+        </li>
+        <li>
+          <span class="num">04</span>
+          <p><strong>Chromeの継続的バージョンアップ</strong><br>一度作って終わりではなく、年2回のメンテナンスを前提とした「運用できる成果物」が求められています。</p>
+        </li>
+      </ul>
+
+      <div class="quote-box frame">
+        <span class="tr-corner"></span><span class="bl-corner"></span>
+        <div class="mark">“</div>
+        <p>
+          「当方素人なので」とのお言葉がありましたが、ご提示いただいた要件は非常に具体的で、
+          自動化運用の実情を深く理解された上での仕様だと感じています。<br><br>
+          Kairosは、エクセル仕様書を正確にトレースしながら、曖昧な部分は都度ご相談し、
+          長期的に「メンテできる開発体制」としてお付き合いさせていただきます。
+        </p>
+        <div class="sign">— Kairos Development Team</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== VALUE ===================== -->
+<section class="grid-bg">
+  <div class="wrap">
+    <div class="sec-label">WHAT WE PROVIDE</div>
+    <h2 class="sec-title">Kairosが提供できる価値</h2>
+
+    <div class="value-grid">
+      <div class="value-card frame">
+        <span class="tr-corner"></span><span class="bl-corner"></span>
+        <div class="idx">FEATURE / 01</div>
+        <h3>固定解像度WebView設計</h3>
+        <p>端末依存を排除し、縦横のピクセル指定どおりに表示領域を固定。どの端末でも同一の座標系でマクロが機能する基盤を構築します。</p>
+        <span class="tag">RESOLUTION LOCK</span>
+      </div>
+
+      <div class="value-card frame">
+        <span class="tr-corner"></span><span class="bl-corner"></span>
+        <div class="idx">FEATURE / 02</div>
+        <h3>複数プロファイル管理</h3>
+        <p>保存・切替・リセットを備えたプロファイル機構を実装。Cookieやセッション状態を含め、運用環境ごとに安全に分離管理します。</p>
+        <span class="tag">PROFILE SYSTEM</span>
+      </div>
+
+      <div class="value-card frame">
+        <span class="tr-corner"></span><span class="bl-corner"></span>
+        <div class="idx">FEATURE / 03</div>
+        <h3>座標判定マーカー実装</h3>
+        <p>表示エリア外に自動化用の基準マークを設置。MacroDroid/Taskerからの座標検出が安定して行える構造を設計します。</p>
+        <span class="tag">ANCHOR POINT</span>
+      </div>
+
+      <div class="value-card frame">
+        <span class="tr-corner"></span><span class="bl-corner"></span>
+        <div class="idx">FEATURE / 04</div>
+        <h3>画像非表示モード</h3>
+        <p>通信量削減・表示速度向上のため、画像を非表示にしてもレイアウトが崩れないCSS制御を実装。自動化精度を落としません。</p>
+        <span class="tag">LIGHTWEIGHT MODE</span>
+      </div>
+
+      <div class="value-card frame">
+        <span class="tr-corner"></span><span class="bl-corner"></span>
+        <div class="idx">FEATURE / 05</div>
+        <h3>継続的なメンテナンス体制</h3>
+        <p>年2回程度のChromeエンジン更新、不具合対応、仕様追加まで、長期サポート前提で継続的にお付き合いします。</p>
+        <span class="tag">LONG-TERM SUPPORT</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SCHEDULE ===================== -->
+<section>
+  <div class="wrap">
+    <div class="sec-label">PROCESS</div>
+    <h2 class="sec-title">進め方・スケジュールイメージ</h2>
+
+    <div class="timeline">
+      <div class="t-row">
+        <div class="t-step">STEP<span class="big">01</span></div>
+        <div class="t-body">
+          <h4>仕様確認・要件すり合わせ</h4>
+          <p>添付エクセルの仕様を精査し、プロファイル項目・表示範囲・マーカー位置など不明点をヒアリングしながら要件を確定します。</p>
+        </div>
+        <div class="t-dur">約3〜5日</div>
+      </div>
+
+      <div class="t-row">
+        <div class="t-step">STEP<span class="big">02</span></div>
+        <div class="t-body">
+          <h4>画面・構造設計</h4>
+          <p>プロファイル管理の画面構成、解像度固定の実装方式、座標マーカーの配置ロジックを設計し、開発前に認識合わせを行います。</p>
+        </div>
+        <div class="t-dur">約3〜4日</div>
+      </div>
+
+      <div class="t-row">
+        <div class="t-step">STEP<span class="big">03</span></div>
+        <div class="t-body">
+          <h4>実装・内部テスト</h4>
+          <p>WebView実装、プロファイル機能、表示範囲固定、画像非表示モードなどを順次実装し、複数端末での動作確認を行います。</p>
+        </div>
+        <div class="t-dur">約2〜3週間</div>
+      </div>
+
+      <div class="t-row">
+        <div class="t-step">STEP<span class="big">04</span></div>
+        <div class="t-body">
+          <h4>実機確認・微調整</h4>
+          <p>実際の自動化運用を想定したテストを行い、座標ズレやレイアウト崩れがないかを確認。必要に応じて微調整します。</p>
+        </div>
+        <div class="t-dur">約3〜5日</div>
+      </div>
+
+      <div class="t-row">
+        <div class="t-step">STEP<span class="big">05</span></div>
+        <div class="t-body">
+          <h4>APK納品・運用開始</h4>
+          <p>APK形式で納品。以降、Chromeバージョンアップ（年2回程度）や、自動化（マクロ）開発のご相談にも継続対応いたします。</p>
+        </div>
+        <div class="t-dur">納期目安：1ヶ月以内</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CLOSING ===================== -->
+<section class="closing grid-bg">
+  <div class="wrap">
+    <div class="closing-panel frame">
+      <span class="tr-corner"></span><span class="bl-corner"></span>
+      <h2>まずは、仕様書の<span>座標合わせ</span>から。</h2>
+      <p>
+        エクセル仕様書を拝見したうえで、具体的な実装方針とお見積り（①ブラウザアプリ／②バージョンアップ保守）をご提示いたします。
+        自動化（マクロ）開発についても、資料をいただき次第、別途お見積り可能です。
+      </p>
+      <a href="#" class="cta-btn">お問い合わせ・ご相談はこちら →</a>
+
+      <div class="closing-meta">
+        <div>対応実績<span>Androidアプリ開発 複数件</span></div>
+        <div>対応体制<span>継続メンテナンス対応可</span></div>
+        <div>見積り<span>①②③ 個別対応いたします</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  KAIROS — Web制作・システム開発チーム ／ Proposal for wolf20165
+</footer>
+
+</body>
+</html>
